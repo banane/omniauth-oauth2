@@ -24,7 +24,6 @@ module OmniAuth
       option :authorize_options, [:scope]
       option :token_params, {}
       option :token_options, []
-      option :auth_token_params, {}
       option :provider_ignores_state, false
 
       attr_accessor :access_token
@@ -97,7 +96,19 @@ module OmniAuth
 
       def build_access_token
         verifier = request.params['code']
-        client.auth_code.get_token(verifier, {:redirect_uri => callback_url}.merge(token_params.to_hash(:symbolize_keys => true)), deep_symbolize(options.auth_token_params))
+        hash = symbolize({:redirect_uri => callback_url}.merge(token_params.to_hash))
+        client.auth_code.get_token(verifier, hash)
+      end
+
+      private
+
+      def symbolize hash
+        new_hash = {}
+        new_hash.tap do |h|
+          hash.each do |key, value|
+            h["#{key}".to_sym] = value
+          end
+        end
       end
 
       # An error that is indicated in the OAuth 2.0 callback.
